@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:intl_phone_field/countries.dart';
 import 'package:intl_phone_field/intl_phone_field.dart';
+import 'package:pass_fort/backend/api_connection.dart';
 import 'package:pass_fort/constants/application_consts.dart';
-import 'package:pass_fort/register/confirm_register.dart';
+import 'package:pass_fort/screens/user_screens/confirm_sign.dart';
 
-class Register extends StatelessWidget {
-  const Register({super.key});
+class UserPhoneInput extends StatelessWidget {
+  const UserPhoneInput({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -15,19 +16,19 @@ class Register extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       debugShowMaterialGrid: false,
-      home: const RegisterPage(),
+      home: const PhonePage(),
     );
   }
 }
 
-class RegisterPage extends StatefulWidget {
-  const RegisterPage({super.key});
+class PhonePage extends StatefulWidget {
+  const PhonePage({super.key});
 
   @override
-  State<RegisterPage> createState() => _RegisterPageState();
+  State<PhonePage> createState() => _PhonePageState();
 }
 
-class _RegisterPageState extends State<RegisterPage> {
+class _PhonePageState extends State<PhonePage> {
   bool _isButtonVisible = false;
   var phoneNumber = "";
   @override
@@ -99,15 +100,15 @@ class _RegisterPageState extends State<RegisterPage> {
         SizedBox(height: 25),
         Visibility(
           visible: _isButtonVisible,
-          child: RegisterButton(phoneNumber: phoneNumber),
+          child: InputButton(phoneNumber: phoneNumber),
         ),
       ],
     );
   }
 }
 
-class RegisterButton extends StatelessWidget {
-  const RegisterButton({
+class InputButton extends StatelessWidget {
+  const InputButton({
     super.key,
     required this.phoneNumber,
   });
@@ -158,27 +159,38 @@ class RegisterButton extends StatelessWidget {
                 ),
                 TextButton(
                   onPressed: () {
-                    // Perform the submit action
-                    Navigator.of(context).pop(); // Close the dialog
-                    Navigator.of(context).push(
-                      PageRouteBuilder(
-                        pageBuilder: (context, animation, secondaryAnimation) =>
-                            ConfirmRegister(),
-                        transitionsBuilder:
-                            (context, animation, secondaryAnimation, child) {
-                          const begin = Offset(1.0, 0.0);
-                          const end = Offset.zero;
-                          const curve = Curves.ease;
+                    Future<bool> res = ApiConnection().checkUser(phoneNumber);
+                    res.then((isUserValid) {
+                      if (context.mounted) {
+                        Navigator.of(context).pop(); // Close the dialog
+                        Navigator.of(context).push(
+                          PageRouteBuilder(
+                            pageBuilder:
+                                (context, animation, secondaryAnimation) =>
+                                    RegisterLogin(
+                              type: isUserValid ? "login" : "register",
+                              phoneNumber: phoneNumber,
+                            ),
+                            transitionsBuilder: (context, animation,
+                                secondaryAnimation, child) {
+                              const begin = Offset(1.0, 0.0);
+                              const end = Offset.zero;
+                              const curve = Curves.ease;
 
-                          var tween = Tween(begin: begin, end: end)
-                              .chain(CurveTween(curve: curve));
-                          return SlideTransition(
-                            position: animation.drive(tween),
-                            child: child,
-                          );
-                        },
-                      ),
-                    );
+                              var tween = Tween(begin: begin, end: end)
+                                  .chain(CurveTween(curve: curve));
+                              return SlideTransition(
+                                position: animation.drive(tween),
+                                child: child,
+                              );
+                            },
+                          ),
+                        );
+                      } else {
+                        // Handle the case where the user is not valid
+                      }
+                    });
+                    // Perform the submit action
                   },
                   child: Text('Yes'),
                 ),
