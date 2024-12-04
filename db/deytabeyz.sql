@@ -1,0 +1,7 @@
+CREATE TABLE Users(
+id INT AUTO_INCREMENT PRIMARY KEY,
+phoneNumber VARCHAR(15),
+registerDate DATETIME
+registerIP VARCHAR(15)
+);
+
