@@ -128,7 +128,6 @@ class ApiConnection {
         'otp': otp,
       },
     );
-    print(response.body);
     final jsonResponse = jsonDecode(response.body);
     if (response.statusCode == 200) {
       var res = jsonResponse['status'];

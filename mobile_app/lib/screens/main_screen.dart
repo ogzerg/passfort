@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:pass_fort/backend/two_factor_auth.dart';
 import 'package:pass_fort/backend/twofac_info.dart';
 import 'package:pass_fort/constants/application_consts.dart';
 
@@ -30,56 +32,15 @@ class _MainPageState extends State<MainPage> {
   double iconSize = 35.0;
   List<TwofacInfo> exampleList = [
     TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 1',
-      twoFacKey: '2fac1',
-    ),
+        image: Image.asset('assets/app_icon.png'),
+        title: '2FA 1',
+        auth: TwoFactorAuth(secret: "SLSJHDFJKSHFDKJSHKJFSHKJFDKLFSDD")),
     TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 2',
-      twoFacKey: '2fac2',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 3',
-      twoFacKey: '2fac3',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 4',
-      twoFacKey: '2fac4',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 5',
-      twoFacKey: '2fac5',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 6',
-      twoFacKey: '2fac6',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 7',
-      twoFacKey: '2fac7',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 8',
-      twoFacKey: '2fac8',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 9',
-      twoFacKey: '2fac9',
-    ),
-    TwofacInfo(
-      image: Image.asset('assets/app_icon.png'),
-      title: '2FA 10',
-      twoFacKey: '2fac10',
-    ),
+        image: Image.asset('assets/app_icon.png'),
+        title: '2FA 2',
+        auth: TwoFactorAuth(secret: "SLSJHDFJKSHFDKJSHKJFSHKJFDALFSDD")),
   ];
+  late bool twoFacEnabled;
   late TwofacInfo selectedService;
   TextEditingController searchController = TextEditingController();
 
@@ -102,11 +63,14 @@ class _MainPageState extends State<MainPage> {
   @override
   void initState() {
     super.initState();
+    twoFacEnabled = exampleList.isNotEmpty;
     filteredList = exampleList;
     searchController.addListener(() {
       filterList();
     });
-    selectedService = exampleList[0];
+    if (twoFacEnabled) {
+      selectedService = exampleList[0];
+    }
   }
 
   List<TwofacInfo> filteredList = [];
@@ -120,22 +84,30 @@ class _MainPageState extends State<MainPage> {
         actions: appBarActions,
       ),
       body: SafeArea(
-        child: Center(
-          child: Column(
-            children: <Widget>[
+        child: Column(
+          children: <Widget>[
+            if (twoFacEnabled)
               TwoFacWidget(
                 twoFacService: selectedService,
               ),
-              SizedBox(
-                height: 10,
-              ),
-              twoFacList()
-            ],
-          ),
+            SizedBox(
+              height: 10,
+            ),
+            twoFacList()
+          ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: () {
+          // String data = "";
+          // FlutterBarcodeScanner.scanBarcode(
+          //         "#000000", "Cancel", true, ScanMode.QR)
+          //     .then((value) {
+          //   setState(() {
+          //     data = value;
+          //   });
+          // });
+        },
         backgroundColor: Colors.grey,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(50),
@@ -147,31 +119,50 @@ class _MainPageState extends State<MainPage> {
   }
 
   Expanded twoFacList() {
-    return Expanded(
-        child: SingleChildScrollView(
-      child: Wrap(
-        spacing: 8.0, // Yatay boşluk
-        runSpacing: 8.0, // Dikey boşluk
-        children: filteredList.map((TwofacInfo twofacInfo) {
-          return SizedBox(
-            width: 200.0,
-            child: ListTile(
-              leading: twofacInfo.image,
-              title: Text(twofacInfo.title),
-              onTap: () {
-                setState(() {
-                  selectedService = twofacInfo;
-                  _isSearching = false;
-                  _searchQuery = ""; // Arama alanını temizle
-                  searchController.clear(); // Arama alanını temizle
-                  resetFilteredList();
-                });
-              },
+    if (twoFacEnabled) {
+      return Expanded(
+          child: SingleChildScrollView(
+        child: Wrap(
+          spacing: 8.0, // Yatay boşluk
+          runSpacing: 8.0, // Dikey boşluk
+          children: filteredList.map((TwofacInfo twofacInfo) {
+            return SizedBox(
+              width: 200.0,
+              child: ListTile(
+                leading: twofacInfo.image,
+                title: Text(twofacInfo.title),
+                onTap: () {
+                  setState(() {
+                    selectedService = twofacInfo;
+                    _isSearching = false;
+                    _searchQuery = ""; // Arama alanını temizle
+                    searchController.clear(); // Arama alanını temizle
+                    resetFilteredList();
+                  });
+                },
+              ),
+            );
+          }).toList(),
+        ),
+      ));
+    } else {
+      return Expanded(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Center(
+              child: Text(
+                "No 2FA services found\nPress the + button to add a new service",
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ),
-          );
-        }).toList(),
-      ),
-    ));
+          ],
+        ),
+      );
+    }
   }
 
   List<Widget> get appBarActions {
@@ -300,25 +291,100 @@ class TwoFacWidget extends StatelessWidget {
       height: 325.0,
       color: ApplicationColors.mainScreenColor,
       child: Column(
+        mainAxisAlignment:
+            MainAxisAlignment.spaceBetween, // Widget'lar arasını aç
         children: [
-          SizedBox(
-            height: 25,
-          ),
           Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
+              SizedBox(height: 25),
               SizedBox(
                 width: 100.0, // Adjust the width as needed
                 height: 100.0, // Adjust the height as needed
                 child: twoFacService.image,
               ),
+              SizedBox(height: 25),
+              Text(
+                twoFacService.title,
+                style:
+                    const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              StreamBuilder<int>(
+                stream:
+                    Stream.periodic(Duration(seconds: 1), (int count) => count),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.active) {
+                    var ts = (DateTime.now().millisecondsSinceEpoch ~/ 1000) %
+                        twoFacService.auth.period;
+                    var tsCalculated = twoFacService.auth.period - ts;
+                    return Column(
+                      children: [
+                        SizedBox(height: 10),
+                        Text(
+                          twoFacService.auth.generate(),
+                          style: const TextStyle(
+                              fontSize: 45, fontWeight: FontWeight.bold),
+                        ),
+                        // SizedBox(height: 10),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            SizedBox(width: 90),
+                            Text(
+                              'Your code expires in $tsCalculated seconds',
+                              style: const TextStyle(fontSize: 15),
+                            ),
+                            SizedBox(width: 25),
+                            Padding(
+                              padding: const EdgeInsets.only(right: 16.0),
+                              child: IconButton(
+                                onPressed: () {
+                                  Clipboard.setData(ClipboardData(
+                                      text: twoFacService.auth.generate()));
+                                },
+                                icon: Icon(Icons.copy),
+                              ),
+                            ),
+                          ],
+                        ),
+                        SizedBox(height: 10),
+                      ],
+                    );
+                  } else {
+                    return const CircularProgressIndicator();
+                  }
+                },
+              ),
             ],
           ),
           SizedBox(
-            height: 25,
+            height: 10,
+            child: StreamBuilder<int>(
+              stream: Stream.periodic(
+                  Duration(milliseconds: 1000), (count) => count),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.active) {
+                  var currentTime =
+                      (DateTime.now().millisecondsSinceEpoch ~/ 1000) %
+                          twoFacService.auth.period;
+                  var remainingTime = twoFacService.auth.period -
+                      (currentTime % twoFacService.auth.period);
+                  var progress = remainingTime / twoFacService.auth.period;
+
+                  return LinearProgressIndicator(
+                    value: progress,
+                    backgroundColor: Colors.grey,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                  );
+                } else {
+                  return LinearProgressIndicator(
+                    value: 0,
+                    backgroundColor: Colors.grey,
+                    valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
+                  );
+                }
+              },
+            ),
           ),
-          Text(twoFacService.title,
-              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold))
         ],
       ),
     );
