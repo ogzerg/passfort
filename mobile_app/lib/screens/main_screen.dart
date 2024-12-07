@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:pass_fort/backend/two_factor_auth.dart';
-import 'package:pass_fort/backend/twofac_info.dart';
+import 'package:hive/hive.dart';
+import 'package:pass_fort/backend/two_fac_info.dart';
 import 'package:pass_fort/constants/application_consts.dart';
+import 'package:pass_fort/screens/add_totp.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -30,23 +32,14 @@ class MainPage extends StatefulWidget {
 class _MainPageState extends State<MainPage> {
   bool iconButtonSelection = true;
   double iconSize = 35.0;
-  List<TwofacInfo> exampleList = [
-    TwofacInfo(
-        image: Image.asset('assets/app_icon.png'),
-        title: '2FA 1',
-        auth: TwoFactorAuth(secret: "SLSJHDFJKSHFDKJSHKJFSHKJFDKLFSDD")),
-    TwofacInfo(
-        image: Image.asset('assets/app_icon.png'),
-        title: '2FA 2',
-        auth: TwoFactorAuth(secret: "SLSJHDFJKSHFDKJSHKJFSHKJFDALFSDD")),
-  ];
-  late bool twoFacEnabled;
+  List<TwofacInfo> twoFactorAuthInfoList = [];
+  bool twoFacEnabled = false;
   late TwofacInfo selectedService;
   TextEditingController searchController = TextEditingController();
 
   void filterList() {
     setState(() {
-      filteredList = exampleList
+      filteredList = twoFactorAuthInfoList
           .where((item) => item.title
               .toLowerCase()
               .contains(searchController.text.toLowerCase()))
@@ -56,25 +49,35 @@ class _MainPageState extends State<MainPage> {
 
   void resetFilteredList() {
     setState(() {
-      filteredList = exampleList;
+      filteredList = twoFactorAuthInfoList;
+    });
+  }
+
+  Future<void> _loadTwoFactorAuthInfoList() async {
+    var box = await Hive.openBox<TwofacInfo>('twofacInfoBox');
+    List<TwofacInfo> allInfo = box.values.toList();
+    setState(() {
+      twoFactorAuthInfoList = allInfo;
+      filteredList = twoFactorAuthInfoList;
+      twoFacEnabled = twoFactorAuthInfoList.isNotEmpty;
+      if (twoFacEnabled) {
+        selectedService = twoFactorAuthInfoList[0];
+      }
     });
   }
 
   @override
   void initState() {
     super.initState();
-    twoFacEnabled = exampleList.isNotEmpty;
-    filteredList = exampleList;
+    _loadTwoFactorAuthInfoList();
     searchController.addListener(() {
       filterList();
     });
-    if (twoFacEnabled) {
-      selectedService = exampleList[0];
-    }
   }
 
   List<TwofacInfo> filteredList = [];
   bool _isSearching = false;
+  // ignore: unused_field
   String _searchQuery = "";
   @override
   Widget build(BuildContext context) {
@@ -93,20 +96,20 @@ class _MainPageState extends State<MainPage> {
             SizedBox(
               height: 10,
             ),
-            twoFacList()
+            buildTwoFactorList()
           ],
         ),
       ),
       floatingActionButton: FloatingActionButton(
         onPressed: () {
-          // String data = "";
-          // FlutterBarcodeScanner.scanBarcode(
-          //         "#000000", "Cancel", true, ScanMode.QR)
-          //     .then((value) {
-          //   setState(() {
-          //     data = value;
-          //   });
-          // });
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => AddTotpScreen(),
+            ),
+          );
+          setState(() {
+            _loadTwoFactorAuthInfoList();
+          });
         },
         backgroundColor: Colors.grey,
         shape: RoundedRectangleBorder(
@@ -118,25 +121,25 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
-  Expanded twoFacList() {
+  Expanded buildTwoFactorList() {
     if (twoFacEnabled) {
       return Expanded(
           child: SingleChildScrollView(
         child: Wrap(
-          spacing: 8.0, // Yatay boşluk
-          runSpacing: 8.0, // Dikey boşluk
+          spacing: 8.0,
+          runSpacing: 8.0,
           children: filteredList.map((TwofacInfo twofacInfo) {
             return SizedBox(
               width: 200.0,
               child: ListTile(
-                leading: twofacInfo.image,
+                leading: Image.memory(base64Decode(twofacInfo.imageBase64)),
                 title: Text(twofacInfo.title),
                 onTap: () {
                   setState(() {
                     selectedService = twofacInfo;
                     _isSearching = false;
-                    _searchQuery = ""; // Arama alanını temizle
-                    searchController.clear(); // Arama alanını temizle
+                    _searchQuery = "";
+                    searchController.clear();
                     resetFilteredList();
                   });
                 },
@@ -191,8 +194,8 @@ class _MainPageState extends State<MainPage> {
           onPressed: () {
             setState(() {
               _isSearching = false;
-              _searchQuery = ""; // Arama alanını temizle
-              searchController.clear(); // Arama alanını temizle
+              _searchQuery = "";
+              searchController.clear();
               resetFilteredList();
             });
           },
@@ -203,10 +206,10 @@ class _MainPageState extends State<MainPage> {
     return [
       SizedBox(width: 10),
       IconButton(
-        iconSize: iconSize, // Increase the icon size
+        iconSize: iconSize,
         onPressed: () {
           setState(() {
-            _isSearching = true; // Arama modunu aç
+            _isSearching = true;
           });
         },
         icon: const Icon(Icons.search_outlined),
@@ -218,8 +221,7 @@ class _MainPageState extends State<MainPage> {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(150),
             shape: BoxShape.rectangle,
-            color: ApplicationColors
-                .appBarContainerColor, // Add a color to make it visible
+            color: ApplicationColors.appBarContainerColor,
           ),
           child: Row(
             children: [
@@ -231,7 +233,7 @@ class _MainPageState extends State<MainPage> {
                         color: ApplicationColors.appBarSelectedIconButtonColor)
                     : null,
                 child: IconButton(
-                  iconSize: iconSize / 1.5, // Increase the icon size
+                  iconSize: iconSize / 1.5,
                   onPressed: () {
                     setState(() {
                       iconButtonSelection = false;
@@ -251,7 +253,7 @@ class _MainPageState extends State<MainPage> {
                         color: ApplicationColors.appBarSelectedIconButtonColor)
                     : null,
                 child: IconButton(
-                  iconSize: iconSize / 1.5, // Increase the icon size
+                  iconSize: iconSize / 1.5,
                   onPressed: () {
                     setState(() {
                       iconButtonSelection = true;
@@ -269,7 +271,7 @@ class _MainPageState extends State<MainPage> {
       ),
       Spacer(),
       IconButton(
-        iconSize: iconSize, // Increase the icon size
+        iconSize: iconSize,
         onPressed: () {},
         icon: const Icon(Icons.settings_outlined),
       ),
@@ -291,16 +293,15 @@ class TwoFacWidget extends StatelessWidget {
       height: 325.0,
       color: ApplicationColors.mainScreenColor,
       child: Column(
-        mainAxisAlignment:
-            MainAxisAlignment.spaceBetween, // Widget'lar arasını aç
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Column(
             children: [
               SizedBox(height: 25),
               SizedBox(
-                width: 100.0, // Adjust the width as needed
-                height: 100.0, // Adjust the height as needed
-                child: twoFacService.image,
+                width: 100.0,
+                height: 100.0,
+                child: Image.memory(base64Decode(twoFacService.imageBase64)),
               ),
               SizedBox(height: 25),
               Text(
@@ -324,7 +325,6 @@ class TwoFacWidget extends StatelessWidget {
                           style: const TextStyle(
                               fontSize: 45, fontWeight: FontWeight.bold),
                         ),
-                        // SizedBox(height: 10),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
