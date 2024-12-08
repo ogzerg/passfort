@@ -1,10 +1,10 @@
 import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:hive/hive.dart';
+import 'package:hotp/hotp.dart';
 import 'package:pass_fort/backend/two_fac_info.dart';
 import 'package:pass_fort/backend/two_factor_auth.dart';
 import 'package:pass_fort/screens/totp_logo_name_selector.dart';
-import 'package:totp/totp.dart';
 
 class AddTotpScreen extends StatefulWidget {
   const AddTotpScreen({super.key});
@@ -91,7 +91,7 @@ class AddTotpScreenState extends State<AddTotpScreen> {
                     ),
                   );
                   // String? secret = uri.queryParameters['secret'];
-                  // String? issuer = uri.queryParameters['issuer'];
+                  // String? issuer+ = uri.queryParameters['issuer'];
                   // String? algorithm = uri.queryParameters['algorithm'];
                   // String? digits = uri.queryParameters['digits'];
                   // String? period = uri.queryParameters['period'];

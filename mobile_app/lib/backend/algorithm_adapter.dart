@@ -1,5 +1,5 @@
 import 'package:hive/hive.dart';
-import 'package:totp/totp.dart';
+import 'package:hotp/hotp.dart';
 
 class AlgorithmAdapter extends TypeAdapter<Algorithm> {
   @override
