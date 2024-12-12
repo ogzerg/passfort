@@ -100,5 +100,30 @@ def login_step2():
 
 # endregion
 
+# region Password Management
+
+@app.route("/set_password", methods=["POST"])
+def set_password():
+    if not session.get("user_id"):
+        return jsonify({"status": False, "msg": "User not logged in"}), 400
+    password = request.form.get("password")
+    if not password:
+        return jsonify({"error": "password is required"}), 400
+    db = DBConnection()
+    db.insert_password(session.get("user_id"), hashlib.sha256(password.encode()).hexdigest())
+    return jsonify({"status": True, "msg": "Password set successfully"}), 200
+
+@app.route("/get_passwords", methods=["POST"])
+def get_passwords():
+    db = DBConnection()
+    if not session.get("user_id"):
+        return jsonify({"status": False, "msg": "User not logged in"}), 400
+    passwords = db.get_users_password(session.get("user_id"))
+    if not passwords:
+        return jsonify({"status": False, "msg": "No passwords found"}), 404
+    return jsonify({"status": True, "msg": "Passwords retrieved successfully", "passwords": passwords}), 200
+
+# endregion
+
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

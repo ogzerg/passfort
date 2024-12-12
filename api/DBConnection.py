@@ -1,6 +1,7 @@
 import pymysql
 from dotenv import load_dotenv
 import os
+import json
 
 load_dotenv()
 
@@ -28,3 +29,12 @@ class DBConnection:
     def get_user_by_phone_number(self, phone_number) -> tuple:
         self.cursor.execute(f"SELECT id FROM users WHERE phoneNumber = '{phone_number}'")
         return self.cursor.fetchone()
+    
+    def insert_password(self, user_id,service, password) -> None:
+        self.cursor.execute(f"INSERT INTO user_passwords (user_id,service, password_hash) VALUES ({user_id},'{service}' ,'{password}')")
+        self.conn.commit()
+        
+    def get_users_password(self, user_id) -> list:
+        self.cursor.execute(f"SELECT service, password_hash FROM user_passwords WHERE user_id = {user_id}")
+        passwords = self.cursor.fetchall()
+        return json.dumps([{"id": idx + 1, "service": service, "password": password} for idx, (service, password) in enumerate(passwords)])

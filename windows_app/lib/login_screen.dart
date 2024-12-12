@@ -41,9 +41,10 @@ class _LoginHomePageState extends State<LoginHomePage> {
             const SizedBox(height: 20),
             ElevatedButton(
               onPressed: () {
-                Navigator.push(
+                Navigator.pushAndRemoveUntil(
                   context,
                   MaterialPageRoute(builder: (context) => const MainScreen()),
+                  (route) => false,
                 );
               },
               child: const Text('Login'),
