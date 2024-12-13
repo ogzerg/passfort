@@ -102,7 +102,7 @@ class DBConnection:
                   - password (str): The hashed password for the service.
         """
         self.cursor.execute(
-            "SELECT service, login, password_hash FROM user_passwords WHERE user_id = %s",
+            "SELECT id, service, login, password_hash FROM user_passwords WHERE user_id = %s",
             (user_id,),
         )
         passwords = self.cursor.fetchall()
@@ -110,11 +110,12 @@ class DBConnection:
             [
                 {
                     "id": idx + 1,
+                    "idInDB": id,
                     "service": service,
                     "login": login,
                     "password": password,
                 }
-                for idx, (service, login, password) in enumerate(passwords)
+                for idx, (id,service, login, password) in enumerate(passwords)
             ]
         )
 
@@ -145,3 +146,17 @@ class DBConnection:
                 "registerIP": user[2],
             }
         )
+    def delete_password(self,user_id,id):
+        """
+        Deletes a password entry from the user_passwords table based on user_id and id.
+
+        Args:
+            user_id (int): The ID of the user.
+            id (int): The ID of the password entry to be deleted.
+
+        Returns:
+            int: The number of rows affected by the delete operation.
+        """
+        self.cursor.execute("DELETE FROM user_passwords WHERE user_id = %s AND id = %s",(user_id,id))
+        self.conn.commit()
+        return self.cursor.rowcount

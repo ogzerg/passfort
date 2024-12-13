@@ -1,5 +1,4 @@
 import 'dart:async';
-import 'dart:math';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:web_socket_channel/io.dart';
 import 'package:web_socket_channel/web_socket_channel.dart';
@@ -22,27 +21,15 @@ class WSConnection {
 
   WSConnection._internal();
 
-  String generateRandomString(int len) {
-    var r = Random();
-    const chars =
-        'AaBbCcDdEeFfGgHhIiJjKkLlMmNnOoPpQqRrSsTtUuVvWwXxYyZz1234567890';
-    return List.generate(len, (index) => chars[r.nextInt(chars.length)]).join();
-  }
-
-  Future<String> connect({Map<String, dynamic>? headers}) async {
-    headers = headers ?? {'auth_device': 'desktop'};
+  connect({Map<String, dynamic>? headers, required String genKey}) async {
+    headers = headers ?? {'auth_device': 'mobile'};
     final storage = SecureStorage();
-    String? token = await storage.read('jwt');
-    if (token != null) {
-      headers["Authorization"] = token;
-    } else {
-      token = generateRandomString(12);
-      headers["gen_key"] = token;
-    }
+    String? token = await storage.read('session');
+    headers["Authorization"] = token;
+    headers["gen_key"] = genKey;
     channel = IOWebSocketChannel.connect(Uri.parse(url), headers: headers);
     _broadcastStream = channel.stream.asBroadcastStream();
     isConnected = true;
-    return token;
   }
 
   disconnect() {

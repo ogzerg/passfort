@@ -22,9 +22,11 @@ load_dotenv()
 def generate_otp():
     return random.randint(100000, 999999)
 
+
 def check_user_from_db(phone_number):
     db = DBConnection()
     return db.check_user(phone_number)
+
 
 @app.route("/check_user", methods=["POST"])
 def check_user():
@@ -67,6 +69,8 @@ def register_step2():
         session["user_id"] = lastRow
         return jsonify({"status": True, "msg": "User registered successfully"})
     return jsonify({"status": False, "msg": "OTP verification failed"}), 400
+
+
 # endregion
 
 
@@ -86,6 +90,7 @@ def login_step1():
         return jsonify({"status": True, "msg": "OTP sent successfully"})
     return jsonify({"status": False, "msg": "OTP sending failed"}), 400
 
+
 @app.route("/login_step2", methods=["POST"])
 def login_step2():
     otp = request.form.get("otp")
@@ -99,20 +104,35 @@ def login_step2():
         return jsonify({"status": True, "msg": "User logged in successfully"})
     return jsonify({"status": False, "msg": "OTP verification failed"}), 400
 
+
 # endregion
 
 # region Password Management
 
-@app.route("/set_password", methods=["POST"])
+
+@app.route("/add_password", methods=["POST"])
 def set_password():
     if not session.get("user_id"):
         return jsonify({"status": False, "msg": "User not logged in"}), 400
+    service = request.form.get("service")
+    login = request.form.get("login")
     password = request.form.get("password")
-    if not password:
-        return jsonify({"error": "password is required"}), 400
+    if not service or not login or not password:
+        return (
+            jsonify(
+                {"status": False, "error": "service, login, password are required"}
+            ),
+            400,
+        )
     db = DBConnection()
-    db.insert_password(session.get("user_id"), hashlib.sha256(password.encode()).hexdigest())
+    db.insert_password(
+        session.get("user_id"),
+        service,
+        login,
+        hashlib.sha256(password.encode()).hexdigest(),
+    )
     return jsonify({"status": True, "msg": "Password set successfully"}), 200
+
 
 @app.route("/get_passwords", methods=["POST"])
 def get_passwords():
@@ -121,19 +141,48 @@ def get_passwords():
         return jsonify({"status": False, "msg": "User not logged in"}), 400
     passwords = db.get_users_password(session.get("user_id"))
     if not passwords:
-        return jsonify({"status": False, "msg": "No passwords found"}), 404
-    return jsonify({"status": True, "msg": "Passwords retrieved successfully", "passwords": passwords}), 200
+        return jsonify({"status": True, "msg": "No passwords found"}), 404
+    return (
+        jsonify(
+            {
+                "status": True,
+                "msg": "Passwords retrieved successfully",
+                "passwords": passwords,
+            }
+        ),
+        200,
+    )
+
+@app.route("/delete_password", methods=["POST"])
+def delete_password():
+    db = DBConnection()
+    if not session.get("user_id"):
+        return jsonify({"status": False, "msg": "User not logged in"}), 400
+    id = request.form.get("id")
+    print(id)
+    if not id:
+        return jsonify({"status": False, "msg": "id is required"}), 400
+    res = db.delete_password(session.get("user_id"), id)
+    if not res:
+        return jsonify({"status": False, "msg": "Password deletion failed"}), 400
+    return jsonify({"status": True, "msg": "Password deleted successfully"}), 200
+
 
 # endregion
 
 # region Check Session
+
 
 @app.route("/check_session", methods=["POST"])
 def check_session():
     uid = session.get("user_id")
     if not uid:
         return jsonify({"status": False, "msg": "User not logged in"}), 400
-    return jsonify({"status": True, "msg": "User is logged in","user_id":str(uid)}), 200
+    return (
+        jsonify({"status": True, "msg": "User is logged in", "user_id": str(uid)}),
+        200,
+    )
+
 
 # endregion
 

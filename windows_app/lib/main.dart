@@ -16,6 +16,6 @@ Future<void> main() async {
   if (token == jwt) {
     runApp(const MainScreen());
   } else {
-    runApp(LoginScreen(token: token));
+    runApp(const LoginScreen());
   }
 }

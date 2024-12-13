@@ -147,4 +147,66 @@ class ApiConnection {
       return {false: jsonResponse["msg"]};
     }
   }
+
+  getPasswords() async {
+    final url = Uri.parse('$baseUrl:$basePort/get_passwords');
+    SecureStorage storage = SecureStorage();
+    String? cookie = await storage.read('session');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'session=$cookie',
+      },
+    );
+    return jsonDecode(response.body);
+  }
+
+  addPassword(service, login, password) async {
+    final url = Uri.parse('$baseUrl:$basePort/add_password');
+    SecureStorage storage = SecureStorage();
+    String? cookie = await storage.read('session');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'session=$cookie',
+      },
+      body: {
+        'service': service,
+        'login': login,
+        'password': password,
+      },
+    );
+    var res = jsonDecode(response.body);
+    print(res);
+    if (res['status']) {
+      return true;
+    } else {
+      return false;
+    }
+  }
+
+  deletePassword(id) async {
+    final url = Uri.parse('$baseUrl:$basePort/delete_password');
+    SecureStorage storage = SecureStorage();
+    String? cookie = await storage.read('session');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'session=$cookie',
+      },
+      body: {
+        'id': id.toString(),
+      },
+    );
+    var res = jsonDecode(response.body);
+    print(res);
+    if (res['status']) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

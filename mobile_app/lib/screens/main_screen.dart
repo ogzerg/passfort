@@ -4,6 +4,7 @@ import 'package:hive/hive.dart';
 import 'package:pass_fort/backend/two_fac_info.dart';
 import 'package:pass_fort/constants/application_consts.dart';
 import 'package:pass_fort/screens/add_totp.dart';
+import 'package:pass_fort/screens/passwords_screen.dart';
 import 'package:pass_fort/screens/two_fac_widget_grid.dart';
 
 class MainScreen extends StatelessWidget {
@@ -205,6 +206,18 @@ class _MainPageState extends State<MainPage> {
           });
         },
         icon: const Icon(Icons.search_outlined),
+      ),
+      Spacer(),
+      IconButton(
+        iconSize: iconSize,
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => PasswordsScreen(),
+            ),
+          );
+        },
+        icon: const Icon(Icons.lock),
       ),
       Spacer(),
       IconButton(

@@ -111,6 +111,7 @@ async def handle_client(websocket: websockets.WebSocketServerProtocol):
     except websockets_exceptions.ConnectionClosed:
         print(f"Connection shutted down: {websocket.remote_address}")
     finally:
+        await websocket.close()
         connected_clients.remove(websocket)
 
 

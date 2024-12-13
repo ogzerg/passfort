@@ -7,10 +7,8 @@ import 'package:windows_app/backend/ws_connection.dart';
 import 'package:windows_app/main_screen.dart';
 
 class LoginScreen extends StatelessWidget {
-  final String token;
-  const LoginScreen({super.key, required this.token});
+  const LoginScreen({super.key});
 
-  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -18,14 +16,13 @@ class LoginScreen extends StatelessWidget {
       theme: ThemeData(primaryColor: const Color.fromARGB(255, 250, 17, 0)),
       debugShowCheckedModeBanner: false,
       debugShowMaterialGrid: false,
-      home: LoginHomePage(token: token),
+      home: const LoginHomePage(),
     );
   }
 }
 
 class LoginHomePage extends StatefulWidget {
-  final String token;
-  const LoginHomePage({super.key, required this.token});
+  const LoginHomePage({super.key});
 
   @override
   State<LoginHomePage> createState() => _LoginHomePageState();
@@ -35,11 +32,15 @@ class _LoginHomePageState extends State<LoginHomePage> {
   final WSConnection wsConnection = WSConnection();
   String message = '';
   Future<void> _initializeWebSocket() async {
-    wsConnection.channel.stream.listen((data) {
+    SecureStorage storage = SecureStorage();
+    var token = await wsConnection.connect();
+    wsConnection.broadcastStream.listen((data) {
       setState(() {
-        message = widget.token;
+        message = token.toString();
       });
       var jsData = jsonDecode(data);
+      print(message);
+      print(jsData);
       if (jsData['status'] && jsData['action'] == 'login') {
         SecureStorage storage = SecureStorage();
         storage.write('jwt', jsData['token']);
@@ -77,16 +78,6 @@ class _LoginHomePageState extends State<LoginHomePage> {
               size: 150,
             ),
             const SizedBox(height: 20),
-            // ElevatedButton(
-            //   onPressed: () {
-            //     Navigator.pushAndRemoveUntil(
-            //       context,
-            //       MaterialPageRoute(builder: (context) => const MainScreen()),
-            //       (route) => false,
-            //     );
-            //   },
-            //   child: const Text('Login'),
-            // ),
           ],
         ),
       ),
