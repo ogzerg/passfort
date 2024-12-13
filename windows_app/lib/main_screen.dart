@@ -1,5 +1,7 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
-import 'package:windows_app/login_screen.dart';
+import 'package:windows_app/backend/ws_connection.dart';
 import 'package:windows_app/passwords_screen.dart';
 
 class MainScreen extends StatefulWidget {
@@ -10,94 +12,107 @@ class MainScreen extends StatefulWidget {
 }
 
 class _MainScreenState extends State<MainScreen> {
-  int pageIndex = 0;
-  final pages = [
-    const LoginScreen(),
-    const PasswordsScreen(),
-  ];
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-          title: const Text('PassFort'),
-          backgroundColor: const Color.fromARGB(255, 224, 9, 9)),
-      bottomNavigationBar: buildBottomNavigationBar(),
-      body: pages[pageIndex],
-    );
+  late WSConnection wsConnection;
+
+  void refresh() {
+    setState(() {
+      wsConnection.channel.sink
+          .add(jsonEncode({'action': 'getUserInformations'}));
+    });
   }
 
-  buildBottomNavigationBar() {
-    return Container(
-      height: 60,
-      decoration: BoxDecoration(
-        color: Theme.of(context).primaryColor,
-        borderRadius: const BorderRadius.only(
-          topLeft: Radius.circular(20),
-          topRight: Radius.circular(20),
-        ),
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceAround,
-        children: [
-          IconButton(
-            enableFeedback: false,
-            onPressed: () {
-              setState(() {
-                pageIndex = 0;
-              });
-            },
-            icon: pageIndex == 0
-                ? const Icon(
-                    Icons.home,
-                    color: Colors.white,
-                    size: 35,
-                  )
-                : const Icon(
-                    Icons.home_outlined,
-                    color: Colors.white,
-                    size: 35,
-                  ),
+  @override
+  void initState() {
+    super.initState();
+    wsConnection = WSConnection();
+    refresh();
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    wsConnection.channel.sink.close();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    refresh();
+    return MaterialApp(
+        title: 'PassFort',
+        theme: ThemeData(primaryColor: const Color.fromARGB(255, 250, 17, 0)),
+        debugShowCheckedModeBanner: false,
+        debugShowMaterialGrid: false,
+        home: Scaffold(
+          appBar: AppBar(
+              title: const Text(
+                'PassFort',
+                style: TextStyle(color: Colors.white),
+              ),
+              backgroundColor: const Color.fromARGB(255, 224, 9, 9)),
+          body: Center(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                StreamBuilder(
+                  stream: wsConnection.broadcastStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const CircularProgressIndicator();
+                    } else if (snapshot.hasError) {
+                      return Center(child: Text('Error: ${snapshot.error}'));
+                    } else if (!snapshot.hasData || snapshot.data == null) {
+                      return const Center(child: Text('No informations found'));
+                    } else {
+                      if (snapshot.hasData && snapshot.data != null) {
+                        var jsData = jsonDecode(snapshot.data);
+                        if (jsData != null) {
+                          if (jsData["status"] &&
+                              jsData["action"] == "getUserInformations") {
+                            var informations =
+                                jsonDecode(jsData["informations"]);
+                            var phoneNumber = informations["phoneNumber"];
+                            var registerDate = informations["registerDate"];
+                            var registerIP = informations["registerIP"];
+                            return Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'Hello\nYour Informations are:',
+                                  style: TextStyle(
+                                    fontSize: 20,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 20),
+                                Text('Phone Number: $phoneNumber'),
+                                const SizedBox(height: 20),
+                                Text('Register Date: $registerDate'),
+                                const SizedBox(height: 20),
+                                Text('Register IP: $registerIP'),
+                              ],
+                            );
+                          }
+                        }
+                      }
+                      return const Text('No informations found');
+                    }
+                  },
+                ),
+                const SizedBox(height: 20),
+                Builder(builder: (context) {
+                  return ElevatedButton(
+                    onPressed: () async {
+                      await Navigator.of(context).push(MaterialPageRoute(
+                          builder: (context) => const PasswordsScreen()));
+                      setState(() {});
+                    },
+                    child: const Text('Your Passwords'),
+                  );
+                }),
+              ],
+            ),
           ),
-          IconButton(
-            enableFeedback: false,
-            onPressed: () {
-              setState(() {
-                pageIndex = 1;
-              });
-            },
-            icon: pageIndex == 1
-                ? const Icon(
-                    Icons.key,
-                    color: Colors.white,
-                    size: 35,
-                  )
-                : const Icon(
-                    Icons.key_off_outlined,
-                    color: Colors.white,
-                    size: 35,
-                  ),
-          ),
-          IconButton(
-            enableFeedback: false,
-            onPressed: () {
-              setState(() {
-                pageIndex = 2;
-              });
-            },
-            icon: pageIndex == 2
-                ? const Icon(
-                    Icons.work_rounded,
-                    color: Colors.white,
-                    size: 35,
-                  )
-                : const Icon(
-                    Icons.work_outline_outlined,
-                    color: Colors.white,
-                    size: 35,
-                  ),
-          ),
-        ],
-      ),
-    );
+        ));
   }
 }

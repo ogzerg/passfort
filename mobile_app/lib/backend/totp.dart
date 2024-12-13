@@ -38,7 +38,6 @@ class TOTP {
         hmac = Hmac(sha512, secretList);
         break;
       case Algorithm.sha1:
-      default:
         hmac = Hmac(sha1, secretList);
         break;
     }

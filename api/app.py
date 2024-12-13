@@ -12,6 +12,7 @@ import json
 app = Flask(__name__)
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+app.config["SESSION_DEVICE"] = "mobile"
 Session(app)
 
 # Load environment variables from .env file
@@ -122,6 +123,17 @@ def get_passwords():
     if not passwords:
         return jsonify({"status": False, "msg": "No passwords found"}), 404
     return jsonify({"status": True, "msg": "Passwords retrieved successfully", "passwords": passwords}), 200
+
+# endregion
+
+# region Check Session
+
+@app.route("/check_session", methods=["POST"])
+def check_session():
+    uid = session.get("user_id")
+    if not uid:
+        return jsonify({"status": False, "msg": "User not logged in"}), 400
+    return jsonify({"status": True, "msg": "User is logged in","user_id":str(uid)}), 200
 
 # endregion
 
