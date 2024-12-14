@@ -1,8 +1,11 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:windows_app/backend/ws_connection.dart';
+
+import 'backend/rsa_dec_enc.dart';
 
 final WSConnection wsConnection = WSConnection();
 
@@ -27,6 +30,7 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
     });
   }
 
+  bool _isObscured = true;
   @override
   Widget build(BuildContext context) {
     refresh();
@@ -37,6 +41,18 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 224, 9, 9),
+        actions: [
+          IconButton(
+            icon: _isObscured
+                ? const Icon(Icons.visibility)
+                : const Icon(Icons.visibility_off),
+            onPressed: () {
+              setState(() {
+                _isObscured = !_isObscured;
+              });
+            },
+          ),
+        ],
       ),
       body: Center(
         child: Column(
@@ -110,13 +126,30 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                         DataCell(Text(passwords[index]["id"].toString())),
                         DataCell(Text(passwords[index]["service"])),
                         DataCell(Text(passwords[index]["login"])),
-                        DataCell(Text(passwords[index]["password"])),
+                        DataCell(
+                          FutureBuilder<String>(
+                              future: RSA().decryptRSA(
+                                  payload:
+                                      passwords[index]['password'].toString()),
+                              builder: (context, snapshot) {
+                                return ClipRect(
+                                  child: BackdropFilter(
+                                      filter: ImageFilter.blur(
+                                          sigmaX: 2.0, sigmaY: 2.0),
+                                      child: _isObscured
+                                          ? Container(
+                                              color:
+                                                  Colors.black.withOpacity(0.1),
+                                            )
+                                          : Text(snapshot.data ?? '')),
+                                );
+                              }),
+                        ),
                         DataCell(IconButton(
                           icon: const Icon(Icons.copy),
                           onPressed: () {
-                            Clipboard.setData(ClipboardData(
-                              text: passwords[index]["password"],
-                            ));
+                            copyPasswordToClipboard(
+                                passwords[index]['password']);
                             ScaffoldMessenger.of(context)
                                 .showSnackBar(const SnackBar(
                               content: Text('Copied to clipboard'),
@@ -139,5 +172,13 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
         }
       },
     );
+  }
+
+  Future<void> copyPasswordToClipboard(String text) async {
+    String decryptedPassword = await RSA().decryptRSA(
+      payload: text.toString(),
+    );
+
+    Clipboard.setData(ClipboardData(text: decryptedPassword));
   }
 }

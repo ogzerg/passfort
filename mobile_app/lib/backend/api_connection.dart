@@ -1,8 +1,9 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
-
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:pass_fort/backend/storage.dart';
+
+import 'rsa_dec_enc.dart';
 
 class ApiConnection {
   final String baseUrl = dotenv.env['SERVER_URL'] ?? '';
@@ -163,6 +164,7 @@ class ApiConnection {
   }
 
   addPassword(service, login, password) async {
+    final encryptedPassword = await RSA().encryptRSA(payload: password);
     final url = Uri.parse('$baseUrl:$basePort/add_password');
     SecureStorage storage = SecureStorage();
     String? cookie = await storage.read('session');
@@ -175,11 +177,10 @@ class ApiConnection {
       body: {
         'service': service,
         'login': login,
-        'password': password,
+        'password': encryptedPassword,
       },
     );
     var res = jsonDecode(response.body);
-    print(res);
     if (res['status']) {
       return true;
     } else {
@@ -202,7 +203,6 @@ class ApiConnection {
       },
     );
     var res = jsonDecode(response.body);
-    print(res);
     if (res['status']) {
       return true;
     } else {

@@ -1,9 +1,11 @@
 import 'dart:convert';
+import 'dart:ui';
 
 import 'package:ai_barcode_scanner/ai_barcode_scanner.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:pass_fort/backend/api_connection.dart';
+import 'package:pass_fort/backend/rsa_dec_enc.dart';
 import 'package:pass_fort/backend/ws_connection.dart';
 
 final WSConnection ws = WSConnection();
@@ -96,9 +98,19 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
               );
             },
           ),
+          IconButton(
+              onPressed: () {
+                setState(() {
+                  _isObscured = !_isObscured;
+                });
+              },
+              icon: _isObscured
+                  ? const Icon(Icons.visibility)
+                  : const Icon(Icons.visibility_off)),
         ],
       );
 
+  bool _isObscured = true;
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,6 +173,16 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                 ),
                 TextButton(
                   onPressed: () async {
+                    if (serviceController.text.isEmpty ||
+                        loginController.text.isEmpty ||
+                        passwordController.text.isEmpty) {
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(
+                          content: Text('Please fill all fields.'),
+                        ),
+                      );
+                      return;
+                    }
                     var res = await ApiConnection().addPassword(
                         serviceController.text,
                         loginController.text,
@@ -225,14 +247,30 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                     cells: [
                       DataCell(Text(password['id'].toString())),
                       DataCell(Text(password['service'].toString())),
-                      DataCell(Text(password['login'].toString())),
-                      DataCell(Text(password['password'])),
+                      DataCell(Text(password['login'])),
+                      DataCell(
+                        FutureBuilder<String>(
+                            future: RSA().decryptRSA(
+                                payload: password['password'].toString()),
+                            builder: (context, snapshot) {
+                              return ClipRect(
+                                child: BackdropFilter(
+                                    filter: ImageFilter.blur(
+                                        sigmaX: 2.0, sigmaY: 2.0),
+                                    child: _isObscured
+                                        ? Container(
+                                            color:
+                                                Colors.black.withOpacity(0.1),
+                                          )
+                                        : Text(snapshot.data ?? '')),
+                              );
+                            }),
+                      ),
                       DataCell(
                         IconButton(
                           icon: const Icon(Icons.copy),
                           onPressed: () {
-                            Clipboard.setData(
-                                ClipboardData(text: password['password']));
+                            copyPasswordToClipboard(password['password']);
                             ScaffoldMessenger.of(context).showSnackBar(
                               const SnackBar(
                                   content:
@@ -279,5 +317,13 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
         }
       },
     );
+  }
+
+  Future<void> copyPasswordToClipboard(String text) async {
+    String decryptedPassword = await RSA().decryptRSA(
+      payload: text.toString(),
+    );
+
+    Clipboard.setData(ClipboardData(text: decryptedPassword));
   }
 }

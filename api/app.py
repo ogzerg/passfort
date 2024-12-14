@@ -129,7 +129,7 @@ def set_password():
         session.get("user_id"),
         service,
         login,
-        hashlib.sha256(password.encode()).hexdigest(),
+        password,
     )
     return jsonify({"status": True, "msg": "Password set successfully"}), 200
 

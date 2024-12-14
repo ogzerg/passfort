@@ -40,6 +40,7 @@ dependencies:
   web_socket_channel: ^3.0.1
   qr_flutter: ^4.1.0
   shared_preferences: ^2.3.3
+  fast_rsa: ^3.6.6
 
 dev_dependencies:
   flutter_test:

@@ -32,15 +32,12 @@ class _LoginHomePageState extends State<LoginHomePage> {
   final WSConnection wsConnection = WSConnection();
   String message = '';
   Future<void> _initializeWebSocket() async {
-    SecureStorage storage = SecureStorage();
     var token = await wsConnection.connect();
     wsConnection.broadcastStream.listen((data) {
       setState(() {
         message = token.toString();
       });
       var jsData = jsonDecode(data);
-      print(message);
-      print(jsData);
       if (jsData['status'] && jsData['action'] == 'login') {
         SecureStorage storage = SecureStorage();
         storage.write('jwt', jsData['token']);
