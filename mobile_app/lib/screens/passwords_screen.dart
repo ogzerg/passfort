@@ -40,7 +40,7 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                   return AlertDialog(
                     title: Text('Connect PC'),
                     content: Text(
-                        'Open QR code scanner on your PC and scan the QR code below.'),
+                        'Open QR code scanner on your PC and scan the QR code below.\nOr enter the key manually.'),
                     actions: [
                       TextButton(
                         onPressed: () {
@@ -49,11 +49,77 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                         child: Text('Cancel'),
                       ),
                       TextButton(
+                        onPressed: () {
+                          showDialog(
+                            context: context,
+                            builder: (context) {
+                              return AlertDialog(
+                                title: Text('Enter Key Manually'),
+                                content: TextField(
+                                  controller: keyController,
+                                  decoration: const InputDecoration(
+                                    labelText: 'Key',
+                                  ),
+                                ),
+                                actions: [
+                                  TextButton(
+                                    onPressed: () {
+                                      Navigator.of(context).pop();
+                                    },
+                                    child: Text('Cancel'),
+                                  ),
+                                  TextButton(
+                                    onPressed: () async {
+                                      var val = keyController.text;
+                                      if (val.isEmpty) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text('Please enter key.'),
+                                          ),
+                                        );
+                                        return;
+                                      }
+                                      await ws.connect(genKey: val);
+                                      ws.broadcastStream.listen((event) {
+                                        var jsonDecoded = jsonDecode(event);
+                                        if (jsonDecoded['status']) {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text('Connected to PC.'),
+                                            ),
+                                          );
+                                        } else {
+                                          ScaffoldMessenger.of(context)
+                                              .showSnackBar(
+                                            const SnackBar(
+                                              content: Text(
+                                                  'Can not connect to PC.'),
+                                            ),
+                                          );
+                                        }
+                                        Navigator.pop(context);
+                                        Navigator.pop(context);
+                                      });
+                                    },
+                                    child: Text('Continue'),
+                                  ),
+                                ],
+                              );
+                            },
+                          );
+                        },
+                        child: Text('Enter Code Manually'),
+                      ),
+                      TextButton(
                         onPressed: () async {
                           var qrVal = await Navigator.of(context).push(
                             MaterialPageRoute(
                               builder: (context) => AiBarcodeScanner(
                                 hideGalleryButton: false,
+                                hideSheetDragHandler: true,
+                                hideSheetTitle: true,
                                 controller: MobileScannerController(
                                   detectionSpeed: DetectionSpeed.noDuplicates,
                                 ),
@@ -90,7 +156,7 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                             }
                           });
                         },
-                        child: Text('Continue'),
+                        child: Text('Scan QR Code'),
                       ),
                     ],
                   );
@@ -99,6 +165,7 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
             },
           ),
           IconButton(
+              tooltip: 'Toggle password visibility',
               onPressed: () {
                 setState(() {
                   _isObscured = !_isObscured;
@@ -111,6 +178,8 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
       );
 
   bool _isObscured = true;
+
+  TextEditingController keyController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     return Scaffold(

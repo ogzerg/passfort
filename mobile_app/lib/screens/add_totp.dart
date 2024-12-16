@@ -42,6 +42,8 @@ class AddTotpScreenState extends State<AddTotpScreen> {
                   var qrVal = await Navigator.of(context).push(
                     MaterialPageRoute(
                       builder: (context) => AiBarcodeScanner(
+                        hideSheetDragHandler: true,
+                        hideSheetTitle: true,
                         hideGalleryButton: false,
                         controller: MobileScannerController(
                           detectionSpeed: DetectionSpeed.noDuplicates,

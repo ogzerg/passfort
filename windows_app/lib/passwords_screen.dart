@@ -31,6 +31,10 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
   }
 
   bool _isObscured = true;
+
+  TextEditingController serviceController = TextEditingController();
+  TextEditingController loginController = TextEditingController();
+  TextEditingController passwordController = TextEditingController();
   @override
   Widget build(BuildContext context) {
     refresh();
@@ -67,6 +71,83 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
           ],
         ),
       ),
+      floatingActionButton: addPasword(context),
+    );
+  }
+
+  FloatingActionButton addPasword(BuildContext context) {
+    return FloatingActionButton(
+      onPressed: () {
+        serviceController.clear();
+        loginController.clear();
+        passwordController.clear();
+        showDialog(
+            context: context,
+            builder: (context) {
+              return AlertDialog(
+                title: const Text('Add Password'),
+                content: SizedBox(
+                  width: MediaQuery.of(context).size.width * 0.8,
+                  height: MediaQuery.of(context).size.height * 0.3,
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: serviceController,
+                        decoration: const InputDecoration(
+                          labelText: 'Service',
+                        ),
+                      ),
+                      TextField(
+                        controller: loginController,
+                        decoration: const InputDecoration(
+                          labelText: 'Login',
+                        ),
+                      ),
+                      TextField(
+                        controller: passwordController,
+                        decoration: const InputDecoration(
+                          labelText: 'Password',
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  TextButton(
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
+                    child: const Text('Cancel'),
+                  ),
+                  TextButton(
+                    onPressed: () async {
+                      if (serviceController.text.isEmpty ||
+                          loginController.text.isEmpty ||
+                          passwordController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text('Please fill all fields.'),
+                          ),
+                        );
+                        return;
+                      }
+                      wsConnection.channel.sink.add(jsonEncode({
+                        'action': 'addPassword',
+                        'service': serviceController.text,
+                        'login': loginController.text,
+                        'password': await RSA().encryptRSA(
+                            payload: passwordController.text.toString())
+                      }));
+                      Navigator.of(context).pop();
+                      setState(() {});
+                    },
+                    child: const Text('Add'),
+                  ),
+                ],
+              );
+            });
+      },
+      child: const Icon(Icons.add),
     );
   }
 
@@ -118,6 +199,9 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                         style: TextStyle(fontStyle: FontStyle.italic),
                       ),
                     ),
+                    DataColumn(
+                        label: Text("Delete",
+                            style: TextStyle(fontStyle: FontStyle.italic))),
                   ],
                   rows: List<DataRow>.generate(
                     passwords.length,
@@ -154,6 +238,20 @@ class _PasswordsScreenState extends State<PasswordsScreen> {
                                 .showSnackBar(const SnackBar(
                               content: Text('Copied to clipboard'),
                             ));
+                          },
+                        )),
+                        DataCell(IconButton(
+                          icon: const Icon(Icons.delete, color: Colors.red),
+                          onPressed: () {
+                            wsConnection.channel.sink.add(jsonEncode({
+                              'action': 'deletePassword',
+                              'id': passwords[index]['idInDB']
+                            }));
+                            ScaffoldMessenger.of(context)
+                                .showSnackBar(const SnackBar(
+                              content: Text('Password deleted'),
+                            ));
+                            setState(() {});
                           },
                         )),
                       ],

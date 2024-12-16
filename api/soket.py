@@ -108,6 +108,39 @@ async def handle_client(websocket: websockets.WebSocketServerProtocol):
                     }
                     await websocket.send(json.dumps(out))
                 # endregion
+                # region Add Password
+                elif action == "addPassword":
+                    db = DBConnection()
+                    if "service" not in js or "password" not in js or "login" not in js:
+                        out = {
+                            "status": False,
+                            "msg": "Service, login or password is missing",
+                        }
+                        await websocket.send(json.dumps(out))
+                    db.insert_password(
+                        websocket.user_id, js["service"], js["login"], js["password"]
+                    )
+                    out = {
+                        "status": True,
+                        "action": "addPassword",
+                        "msg": "Password set successfully",
+                    }
+                    await websocket.send(json.dumps(out))
+                # endregion
+                # region Delete Password
+                elif action == "deletePassword":
+                    if "id" not in js:
+                        out = {"status": False, "msg": "ID is missing"}
+                        await websocket.send(json.dumps(out))
+                    db = DBConnection()
+                    db.delete_password(websocket.user_id,js["id"])
+                    out = {
+                        "status": True,
+                        "action": "deletePassword",
+                        "msg": "Password deleted successfully",
+                    }
+                    await websocket.send(json.dumps(out))
+                # endregion
     except websockets_exceptions.ConnectionClosed:
         print(f"Connection shutted down: {websocket.remote_address}")
     finally:

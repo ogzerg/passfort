@@ -75,6 +75,28 @@ class _LoginHomePageState extends State<LoginHomePage> {
               size: 150,
             ),
             const SizedBox(height: 20),
+            const Row(
+              children: <Widget>[
+                Expanded(
+                  child: Divider(
+                    color: Colors.black,
+                    height: 36,
+                  ),
+                ),
+                Text("  OR  "),
+                Expanded(
+                  child: Divider(
+                    color: Colors.black,
+                    height: 36,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+            const Text("Enter the code in the mobile app",
+                style: TextStyle(fontSize: 18)),
+            const SizedBox(height: 10),
+            Text(message, style: const TextStyle(fontSize: 18)),
           ],
         ),
       ),

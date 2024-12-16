@@ -323,6 +323,7 @@ class _MainPageState extends State<MainPage> {
             ),
           );
         },
+        tooltip: "Passwords",
         icon: const Icon(Icons.lock),
       ),
       Spacer(),

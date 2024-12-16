@@ -1,11 +1,12 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:windows_app/backend/storage.dart';
-import 'package:windows_app/backend/ws_connection.dart';
-import 'package:windows_app/login_screen.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:windows_app/main_screen.dart';
+
+import 'backend/storage.dart';
+import 'backend/ws_connection.dart';
+import 'login_screen.dart';
 
 Future<void> main() async {
   await dotenv.load(fileName: ".env");

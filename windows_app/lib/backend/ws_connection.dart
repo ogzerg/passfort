@@ -36,7 +36,7 @@ class WSConnection {
     if (token != null) {
       headers["Authorization"] = token;
     } else {
-      token = generateRandomString(12);
+      token = generateRandomString(6);
       headers["gen_key"] = token;
     }
     channel = IOWebSocketChannel.connect(Uri.parse(url), headers: headers);
