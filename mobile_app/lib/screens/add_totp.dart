@@ -56,6 +56,9 @@ class AddTotpScreenState extends State<AddTotpScreen> {
                       ),
                     ),
                   );
+                  if (qrVal == null) {
+                    return;
+                  }
                   Uri uri = Uri.parse(qrVal);
                   if (uri.scheme != 'otpauth') {
                     return;
@@ -75,10 +78,6 @@ class AddTotpScreenState extends State<AddTotpScreen> {
                     algorithm = Algorithm.sha512;
                   } else if (queryParameters['algorithm'] == 'SHA1') {
                     algorithm = Algorithm.sha1;
-                  }
-                  String secret = queryParameters['secret'];
-                  if (secret.length != 32) {
-                    secret = secret.padRight(32, '=');
                   }
                   var twofacInfo = TwofacInfo(
                     imageBase64: selected['base64EncodedImg'],
@@ -106,6 +105,68 @@ class AddTotpScreenState extends State<AddTotpScreen> {
                     SizedBox(width: 12),
                     Text(
                       'Scan QR Code',
+                      style: TextStyle(color: Colors.white),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            SizedBox(height: 20),
+            Row(
+              children: <Widget>[
+                Expanded(
+                  child: Divider(
+                    color: Colors.black,
+                    height: 36,
+                  ),
+                ),
+                Text(" OR "),
+                Expanded(
+                  child: Divider(
+                    color: Colors.black,
+                    height: 36,
+                  ),
+                ),
+              ],
+            ),
+            SizedBox(height: 20),
+            SizedBox(
+              width: 300,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(0),
+                  ),
+                  backgroundColor: Colors.blue,
+                ),
+                onPressed: () async {
+                  var selected = await Navigator.of(context).push(
+                    MaterialPageRoute(
+                      builder: (context) => TotpNameLogoSelector(
+                        data: {},
+                      ),
+                    ),
+                  );
+                  var twofacInfo = TwofacInfo(
+                    imageBase64: selected['base64EncodedImg'],
+                    title: selected['nickname'],
+                    auth: TwoFactorAuth(
+                        secret: selected['secretKey'],
+                        algorithm: Algorithm.sha1,
+                        digits: 6,
+                        period: 30),
+                  );
+                  var box = await Hive.openBox<TwofacInfo>('twofacInfoBox');
+                  await box.add(twofacInfo);
+                  Navigator.of(context).pop();
+                },
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.add, color: Colors.white),
+                    SizedBox(width: 12),
+                    Text(
+                      'Add Manually',
                       style: TextStyle(color: Colors.white),
                     ),
                   ],

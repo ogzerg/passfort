@@ -37,11 +37,15 @@ class _TotpNameLogoSelectorState extends State<TotpNameLogoSelector> {
   String base64EncodedImg1 = '';
   late String base64EncodedImg2;
   late TextEditingController nicknameController;
+  late TextEditingController serviceNameController;
+  late TextEditingController secretKeyController;
   @override
   void initState() {
     super.initState();
     nicknameController = TextEditingController(text: widget.data["issuer"]);
     searchBarController = TextEditingController(text: widget.data["issuer"]);
+    serviceNameController = TextEditingController();
+    secretKeyController = TextEditingController();
     issuer = widget.data['issuer'] ?? 'Unknown Issuer';
     _initializeData();
   }
@@ -52,6 +56,7 @@ class _TotpNameLogoSelectorState extends State<TotpNameLogoSelector> {
   }
 
   bool customSelected = false;
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -161,6 +166,42 @@ class _TotpNameLogoSelectorState extends State<TotpNameLogoSelector> {
                 ],
               ),
               SizedBox(height: 40),
+              if (widget.data.isEmpty)
+                Column(
+                  children: [
+                    SizedBox(
+                      width: 350,
+                      child: TextField(
+                        controller: serviceNameController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter Service Name',
+                        ),
+                        onChanged: (value) {
+                          setState(() {
+                            issuer = value;
+                            if (value.isEmpty) {
+                              issuer = "Unknown Issuer";
+                            }
+                          });
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    SizedBox(
+                      width: 350,
+                      child: TextField(
+                        controller: secretKeyController,
+                        decoration: InputDecoration(
+                          hintText: 'Enter Secret Key',
+                        ),
+                        onChanged: (value) {
+                          setState(() {});
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                  ],
+                ),
               SizedBox(
                 width: 350,
                 child: TextField(
@@ -185,12 +226,40 @@ class _TotpNameLogoSelectorState extends State<TotpNameLogoSelector> {
                     if (base64EncodedImg1.isEmpty) {
                       base64EncodedImg1 = base64EncodedImg2;
                     }
-                    Navigator.of(context).pop({
-                      'base64EncodedImg': customSelected
-                          ? base64EncodedImg2
-                          : base64EncodedImg1,
-                      'nickname': nicknameController.text
-                    });
+                    if (widget.data.isNotEmpty) {
+                      Navigator.of(context).pop({
+                        'base64EncodedImg': customSelected
+                            ? base64EncodedImg2
+                            : base64EncodedImg1,
+                        'nickname': nicknameController.text
+                      });
+                    } else {
+                      if (serviceNameController.text.isEmpty ||
+                          secretKeyController.text.isEmpty ||
+                          nicknameController.text.isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                          content: Text('Please fill all fields'),
+                        ));
+                        return;
+                      }
+                      Navigator.of(context).pop({
+                        'base64EncodedImg': customSelected
+                            ? base64EncodedImg2
+                            : base64EncodedImg1,
+                        'nickname': nicknameController.text,
+                        'secretKey': secretKeyController.text,
+                      });
+                      // Navigator.of(context).push(
+                      //   MaterialPageRoute(
+                      //     builder: (context) => TotpNameLogoSelector(
+                      //       data: {
+                      //         'serviceName': serviceNameController.text,
+                      //         'issuer': issuer,
+                      //       },
+                      //     ),
+                      //   ),
+                      // );
+                    }
                   },
                   child: Text("Continue",
                       style: TextStyle(

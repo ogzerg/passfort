@@ -133,24 +133,22 @@ class _MainPageState extends State<MainPage> {
       return Wrap(
         children: filteredList.map((TwofacInfo twofacInfo) {
           return Column(
-            mainAxisAlignment: MainAxisAlignment.start,
             children: [
               SizedBox(
                 width: 100.0,
                 child: ListTile(
-                  leading: Container(
-                      width: 50.0,
-                      height: 50.0,
-                      alignment: Alignment.center,
-                      child:
-                          Image.memory(base64Decode(twofacInfo.imageBase64))),
+                  leading: Image.memory(
+                    base64Decode(twofacInfo.imageBase64),
+                    width: 50.0,
+                    height: 50.0,
+                    fit: BoxFit.cover,
+                  ),
                   onTap: () {
                     setState(() {
                       selectedService = twofacInfo;
                       _isSearching = false;
                       _searchQuery = "";
                       searchController.clear();
-                      resetFilteredList();
                     });
                   },
                   onLongPress: () {
@@ -183,7 +181,12 @@ class _MainPageState extends State<MainPage> {
                 ),
               ),
               SizedBox(height: 1),
-              Text("${twofacInfo.title} "),
+              SizedBox(
+                  width: 100,
+                  child: Text(
+                    "${twofacInfo.title} ",
+                    textAlign: TextAlign.center,
+                  )),
               SizedBox(height: 20),
             ],
           );
