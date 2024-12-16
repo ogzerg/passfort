@@ -5,6 +5,7 @@ import 'package:pass_fort/backend/two_fac_info.dart';
 import 'package:pass_fort/constants/application_consts.dart';
 import 'package:pass_fort/screens/add_totp.dart';
 import 'package:pass_fort/screens/passwords_screen.dart';
+import 'package:pass_fort/screens/settings_screen.dart';
 import 'package:pass_fort/screens/two_fac_widget_grid.dart';
 
 class MainScreen extends StatelessWidget {
@@ -324,7 +325,13 @@ class _MainPageState extends State<MainPage> {
       Spacer(),
       IconButton(
         iconSize: iconSize,
-        onPressed: () {},
+        onPressed: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (context) => SettingsScreen(),
+            ),
+          );
+        },
         icon: const Icon(Icons.settings_outlined),
       ),
     ];

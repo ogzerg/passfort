@@ -186,5 +186,28 @@ def check_session():
 
 # endregion
 
+
+# region Get User Informations
+
+@app.route("/user_informations", methods=["POST"])
+def get_user_informations():
+    db = DBConnection()
+    if not session.get("user_id"):
+        return jsonify({"status": False, "msg": "User not logged in"}), 400
+    informations = db.get_user_informations(session.get("user_id"))
+    if not informations:
+        return jsonify({"status": True, "msg": "No informations found"}), 404
+    return (
+        jsonify(
+            {
+                "status": True,
+                "msg": "Informations retrieved successfully",
+                "informations": informations,
+            }
+        ),
+        200,
+    )
+
+# endregion
 if __name__ == "__main__":
     app.run(debug=True, host="0.0.0.0")

@@ -209,4 +209,19 @@ class ApiConnection {
       return false;
     }
   }
+
+  getAccountInformations() async {
+    final url = Uri.parse('$baseUrl:$basePort/user_informations');
+    SecureStorage storage = SecureStorage();
+    String? cookie = await storage.read('session');
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'Cookie': 'session=$cookie',
+      },
+    );
+    var js = jsonDecode(response.body);
+    return jsonDecode(js['informations']);
+  }
 }
