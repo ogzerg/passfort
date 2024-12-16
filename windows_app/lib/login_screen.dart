@@ -7,7 +7,8 @@ import 'package:windows_app/backend/ws_connection.dart';
 import 'package:windows_app/main_screen.dart';
 
 class LoginScreen extends StatelessWidget {
-  const LoginScreen({super.key});
+  final WSConnection wsConnection;
+  const LoginScreen({super.key, required this.wsConnection});
 
   @override
   Widget build(BuildContext context) {
@@ -16,24 +17,24 @@ class LoginScreen extends StatelessWidget {
       theme: ThemeData(primaryColor: const Color.fromARGB(255, 250, 17, 0)),
       debugShowCheckedModeBanner: false,
       debugShowMaterialGrid: false,
-      home: const LoginHomePage(),
+      home: LoginHomePage(wsConnection: wsConnection),
     );
   }
 }
 
 class LoginHomePage extends StatefulWidget {
-  const LoginHomePage({super.key});
+  final WSConnection wsConnection;
+  const LoginHomePage({super.key, required this.wsConnection});
 
   @override
   State<LoginHomePage> createState() => _LoginHomePageState();
 }
 
 class _LoginHomePageState extends State<LoginHomePage> {
-  final WSConnection wsConnection = WSConnection();
   String message = '';
   Future<void> _initializeWebSocket() async {
-    var token = await wsConnection.connect();
-    wsConnection.broadcastStream.listen((data) {
+    var token = await widget.wsConnection.connect();
+    widget.wsConnection.broadcastStream.listen((data) {
       setState(() {
         message = token.toString();
       });
@@ -44,7 +45,10 @@ class _LoginHomePageState extends State<LoginHomePage> {
         if (mounted) {
           Navigator.pushAndRemoveUntil(
             context,
-            MaterialPageRoute(builder: (context) => const MainScreen()),
+            MaterialPageRoute(
+                builder: (context) => MainScreen(
+                      wsConnection: widget.wsConnection,
+                    )),
             (route) => false,
           );
         }

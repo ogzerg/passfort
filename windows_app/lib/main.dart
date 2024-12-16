@@ -15,8 +15,8 @@ Future<void> main() async {
   WSConnection wsConnection = WSConnection();
   var token = await wsConnection.connect();
   if (token == jwt) {
-    runApp(const MainScreen());
+    runApp(MainScreen(wsConnection: wsConnection));
   } else {
-    runApp(const LoginScreen());
+    runApp(LoginScreen(wsConnection: wsConnection));
   }
 }

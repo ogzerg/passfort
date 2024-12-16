@@ -8,7 +8,8 @@ import 'package:windows_app/passwords_screen.dart';
 import 'login_screen.dart';
 
 class MainScreen extends StatelessWidget {
-  const MainScreen({super.key});
+  final WSConnection wsConnection;
+  const MainScreen({super.key, required this.wsConnection});
 
   @override
   Widget build(BuildContext context) {
@@ -18,13 +19,14 @@ class MainScreen extends StatelessWidget {
       ),
       debugShowCheckedModeBanner: false,
       debugShowMaterialGrid: false,
-      home: const MainPage(),
+      home: MainPage(wsConnection: wsConnection),
     );
   }
 }
 
 class MainPage extends StatefulWidget {
-  const MainPage({super.key});
+  final WSConnection wsConnection;
+  const MainPage({super.key, required this.wsConnection});
 
   @override
   State<MainPage> createState() => _MainPage();
@@ -34,6 +36,7 @@ class _MainPage extends State<MainPage> {
   late WSConnection wsConnection;
 
   void refresh() {
+    wsConnection.connect();
     setState(() {
       wsConnection.channel.sink
           .add(jsonEncode({'action': 'getUserInformations'}));
@@ -44,12 +47,6 @@ class _MainPage extends State<MainPage> {
   void initState() {
     super.initState();
     wsConnection = WSConnection();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    wsConnection.channel.sink.close();
   }
 
   @override
@@ -85,12 +82,12 @@ class _MainPage extends State<MainPage> {
                         TextButton(
                           onPressed: () async {
                             Navigator.of(context).pop();
-                            wsConnection.disconnect();
                             SecureStorage storage = SecureStorage();
                             await storage.delete('jwt');
                             Navigator.of(context).pushReplacement(
                               MaterialPageRoute(
-                                builder: (context) => const LoginScreen(),
+                                builder: (context) => LoginScreen(
+                                    wsConnection: widget.wsConnection),
                               ),
                             );
                           },

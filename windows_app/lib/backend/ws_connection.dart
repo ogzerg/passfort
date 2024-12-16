@@ -44,9 +44,4 @@ class WSConnection {
     isConnected = true;
     return token;
   }
-
-  disconnect() {
-    channel.sink.close();
-    isConnected = false;
-  }
 }
