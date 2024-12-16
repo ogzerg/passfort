@@ -137,7 +137,12 @@ class _MainPageState extends State<MainPage> {
               SizedBox(
                 width: 100.0,
                 child: ListTile(
-                  leading: Image.memory(base64Decode(twofacInfo.imageBase64)),
+                  leading: Container(
+                      width: 50.0,
+                      height: 50.0,
+                      alignment: Alignment.center,
+                      child:
+                          Image.memory(base64Decode(twofacInfo.imageBase64))),
                   onTap: () {
                     setState(() {
                       selectedService = twofacInfo;
@@ -147,10 +152,37 @@ class _MainPageState extends State<MainPage> {
                       resetFilteredList();
                     });
                   },
+                  onLongPress: () {
+                    showMenu(
+                      context: context,
+                      position: RelativeRect.fromLTRB(
+                        MediaQuery.of(context).size.width * 0.5,
+                        MediaQuery.of(context).size.height * 0.5,
+                        MediaQuery.of(context).size.width * 0.5,
+                        MediaQuery.of(context).size.height * 0.5,
+                      ),
+                      items: [
+                        PopupMenuItem(
+                          value: "edit",
+                          child: Text("Edit"),
+                        ),
+                        PopupMenuItem(
+                          value: "delete",
+                          child: Text("Delete"),
+                        ),
+                      ],
+                    ).then((value) {
+                      if (value == "delete") {
+                        deleteTwoFac(twofacInfo);
+                      } else if (value == "edit") {
+                        changeTwoFac(twofacInfo);
+                      }
+                    });
+                  },
                 ),
               ),
               SizedBox(height: 1),
-              Text(twofacInfo.title),
+              Text("${twofacInfo.title} "),
               SizedBox(height: 20),
             ],
           );
@@ -159,6 +191,76 @@ class _MainPageState extends State<MainPage> {
     } else {
       return NoTwoFac();
     }
+  }
+
+  Future<dynamic> changeTwoFac(TwofacInfo twofacInfo) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        TextEditingController titleController =
+            TextEditingController(text: twofacInfo.title);
+        return AlertDialog(
+          title: Text("Edit ${twofacInfo.title}"),
+          content: TextField(
+            controller: titleController,
+            decoration: InputDecoration(
+              labelText: "Title",
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                var box = await Hive.openBox<TwofacInfo>('twofacInfoBox');
+                TwofacInfo updatedTwofacInfo = TwofacInfo(
+                  imageBase64: twofacInfo.imageBase64,
+                  title: titleController.text,
+                  auth: twofacInfo.auth,
+                );
+                box.put(twofacInfo.key, updatedTwofacInfo);
+                _loadTwoFactorAuthInfoList();
+                Navigator.of(context).pop();
+              },
+              child: Text("Save"),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Future<dynamic> deleteTwoFac(TwofacInfo twofacInfo) {
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: Text("Delete ${twofacInfo.title}?"),
+          content: Text("Are you sure you want to delete ${twofacInfo.title}?"),
+          actions: [
+            TextButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+              child: Text("Cancel"),
+            ),
+            TextButton(
+              onPressed: () async {
+                var box = await Hive.openBox<TwofacInfo>('twofacInfoBox');
+                box.delete(twofacInfo.key);
+                _loadTwoFactorAuthInfoList();
+                Navigator.of(context).pop();
+              },
+              child: Text("Delete"),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   List<Widget> get appBarActions {

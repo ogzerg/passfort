@@ -4,7 +4,7 @@ import 'two_factor_auth.dart';
 part 'two_fac_info.g.dart';
 
 @HiveType(typeId: 0)
-class TwofacInfo {
+class TwofacInfo extends HiveObject {
   @HiveField(0)
   final String imageBase64;
 
